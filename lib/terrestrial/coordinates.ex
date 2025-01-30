@@ -1,4 +1,5 @@
 defmodule Terrestrial.Coordinates do
+  @moduledoc false
   @typedoc "used to translate cartesian coordinates into SVG ones and back"
   @type plane :: %{x: axis(), y: axis()}
 

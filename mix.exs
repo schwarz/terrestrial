@@ -26,11 +26,12 @@ defmodule Terrestrial.MixProject do
     [
       {:phoenix_live_view, "~> 1.0"},
       {:ex_doc, "~> 0.36", only: :dev, runtime: false},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false}
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:styler, "~> 1.3", only: [:dev, :test], runtime: false}
     ]
   end
 
-  defp package() do
+  defp package do
     [
       licenses: ["BSD-3-Clause"],
       links: %{"GitHub" => @url}

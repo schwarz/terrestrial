@@ -76,7 +76,7 @@ defmodule Terrestrial.Attributes do
   end
 
   @spec no_arrow() :: (map() -> map())
-  def no_arrow() do
+  def no_arrow do
     fn %{arrow: _} = config -> Map.put(config, :arrow, false) end
   end
 
@@ -216,44 +216,44 @@ defmodule Terrestrial.Attributes do
   end
 
   @spec linear() :: (map() -> map())
-  def linear() do
+  def linear do
     fn %{method: _} = config -> Map.put(config, :method, :linear) end
   end
 
   @spec monotone() :: (map() -> map())
-  def monotone() do
+  def monotone do
     # TODO
     raise "monotone interpolation is not yet supported"
     fn %{method: _} = config -> Map.put(config, :method, :monotone) end
   end
 
   @spec circle() :: (map() -> map())
-  def circle() do
+  def circle do
     fn %{shape: _} = config -> Map.put(config, :shape, :circle) end
   end
 
   @spec triangle() :: (map() -> map())
-  def triangle() do
+  def triangle do
     fn %{shape: _} = config -> Map.put(config, :shape, :triangle) end
   end
 
   @spec square() :: (map() -> map())
-  def square() do
+  def square do
     fn %{shape: _} = config -> Map.put(config, :shape, :square) end
   end
 
   @spec diamond() :: (map() -> map())
-  def diamond() do
+  def diamond do
     fn %{shape: _} = config -> Map.put(config, :shape, :diamond) end
   end
 
   @spec cross() :: (map() -> map())
-  def cross() do
+  def cross do
     fn %{shape: _} = config -> Map.put(config, :shape, :cross) end
   end
 
   @spec plus() :: (map() -> map())
-  def plus() do
+  def plus do
     fn %{shape: _} = config -> Map.put(config, :shape, :plus) end
   end
 
@@ -269,19 +269,19 @@ defmodule Terrestrial.Attributes do
 
   # COLORS
 
-  def pink(), do: Terrestrial.Colors.pink()
-  def purple(), do: Terrestrial.Colors.purple()
-  def blue(), do: Terrestrial.Colors.blue()
-  def green(), do: Terrestrial.Colors.green()
-  def turquoise(), do: Terrestrial.Colors.turquoise()
-  def red(), do: Terrestrial.Colors.red()
-  def dark_yellow(), do: Terrestrial.Colors.dark_yellow()
-  def dark_blue(), do: Terrestrial.Colors.dark_blue()
-  def magenta(), do: Terrestrial.Colors.magenta()
-  def brown(), do: Terrestrial.Colors.brown()
-  def mint(), do: Terrestrial.Colors.mint()
-  def yellow(), do: Terrestrial.Colors.yellow()
-  def gray(), do: Terrestrial.Colors.gray()
-  def dark_gray(), do: Terrestrial.Colors.dark_gray()
-  def label_gray(), do: Terrestrial.Colors.label_gray()
+  def pink, do: Terrestrial.Colors.pink()
+  def purple, do: Terrestrial.Colors.purple()
+  def blue, do: Terrestrial.Colors.blue()
+  def green, do: Terrestrial.Colors.green()
+  def turquoise, do: Terrestrial.Colors.turquoise()
+  def red, do: Terrestrial.Colors.red()
+  def dark_yellow, do: Terrestrial.Colors.dark_yellow()
+  def dark_blue, do: Terrestrial.Colors.dark_blue()
+  def magenta, do: Terrestrial.Colors.magenta()
+  def brown, do: Terrestrial.Colors.brown()
+  def mint, do: Terrestrial.Colors.mint()
+  def yellow, do: Terrestrial.Colors.yellow()
+  def gray, do: Terrestrial.Colors.gray()
+  def dark_gray, do: Terrestrial.Colors.dark_gray()
+  def label_gray, do: Terrestrial.Colors.label_gray()
 end

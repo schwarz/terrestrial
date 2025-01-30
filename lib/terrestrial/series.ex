@@ -1,11 +1,14 @@
 defmodule Terrestrial.Series do
+  @moduledoc false
   use Phoenix.Component
+
+  import Terrestrial.Internal
 
   alias Terrestrial.Attributes, as: CA
   alias Terrestrial.Coordinates, as: Coords
-  import Terrestrial.Internal
 
   defmodule Item do
+    @moduledoc false
     defstruct render: nil,
               limits: nil,
               to_position: nil,
@@ -180,8 +183,7 @@ defmodule Terrestrial.Series do
   # TODO We don't allow for any missing data atm
   def to_commands(method, to_x, to_y, data) do
     points =
-      data
-      |> Enum.map(fn datum -> %{x: to_x.(datum), y: to_y.(datum)} end)
+      Enum.map(data, fn datum -> %{x: to_x.(datum), y: to_y.(datum)} end)
 
     commands =
       case method do

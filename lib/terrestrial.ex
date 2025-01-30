@@ -326,6 +326,7 @@ defmodule Terrestrial do
   end
 
   defmodule Property do
+    @moduledoc false
     defstruct stacked: false,
               to_y: &Function.identity/1,
               to_y_sum: &Function.identity/1,
@@ -385,6 +386,7 @@ defmodule Terrestrial do
   end
 
   defmodule Dot do
+    @moduledoc false
     @type shape :: :circle | :triangle | :square | :diamond | :cross | :plus
 
     defstruct color: Terrestrial.Colors.pink(),
@@ -437,15 +439,16 @@ defmodule Terrestrial do
     to_ticks = fn plane ->
       axis = apply_edits(plane.x, config.limits)
 
-      generate_values(config.amount, :float, axis)
+      config.amount
+      |> generate_values(:float, axis)
       |> Enum.map(& &1.value)
     end
 
     add_tick_values = fn p, ts ->
-      if not config.grid do
-        ts
-      else
+      if config.grid do
         Map.put(ts, :xs, ts.xs ++ to_ticks.(p))
+      else
+        ts
       end
     end
 
@@ -502,12 +505,13 @@ defmodule Terrestrial do
     to_ticks = fn plane ->
       axis = apply_edits(plane.y, config.limits)
 
-      generate_values(config.amount, :float, axis)
+      config.amount
+      |> generate_values(:float, axis)
       |> Enum.map(& &1.value)
     end
 
     add_tick_values = fn p, ts ->
-      if not config.grid, do: ts, else: Map.put(ts, :ys, ts.ys ++ to_ticks.(p))
+      if config.grid, do: Map.put(ts, :ys, ts.ys ++ to_ticks.(p)), else: ts
     end
 
     view = fn plane ->
@@ -639,14 +643,14 @@ defmodule Terrestrial do
     end
 
     to_tick_values = fn plane, config, tick_values ->
-      if not config.grid do
-        tick_values
-      else
+      if config.grid do
         Map.put(
           tick_values,
           :xs,
           tick_values.xs ++ Enum.map(to_ticks.(plane, config), & &1.value)
         )
+      else
+        tick_values
       end
     end
 
@@ -719,14 +723,14 @@ defmodule Terrestrial do
     end
 
     to_tick_values = fn plane, config, tick_values ->
-      if not config.grid do
-        tick_values
-      else
+      if config.grid do
         Map.put(
           tick_values,
           :xs,
           tick_values.ys ++ Enum.map(to_ticks.(plane, config), & &1.value)
         )
+      else
+        tick_values
       end
     end
 
@@ -794,7 +798,8 @@ defmodule Terrestrial do
 
     case tick do
       :integer ->
-        Terrestrial.Intervals.gen_ints(amount, axis, false)
+        amount
+        |> Terrestrial.Intervals.gen_ints(axis, false)
         |> Enum.map(
           to_tick_values.(&round(&1), fn raw ->
             Integer.to_string(round(raw))
@@ -802,7 +807,8 @@ defmodule Terrestrial do
         )
 
       :float ->
-        Terrestrial.Intervals.gen_floats(amount, axis, false)
+        amount
+        |> Terrestrial.Intervals.gen_floats(axis, false)
         |> Enum.map(to_tick_values.(& &1, &Float.to_string/1))
 
       :datetime ->

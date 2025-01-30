@@ -1,4 +1,5 @@
 defmodule Terrestrial.Interpolation do
+  @moduledoc false
   @type method() :: :linear | :monotone | :stepped
 
   defstruct method: nil,

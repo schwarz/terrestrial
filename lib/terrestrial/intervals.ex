@@ -5,13 +5,15 @@ defmodule Terrestrial.Intervals do
 
   # Produce a list of "nice" integers.
   def gen_ints(amount, axis, is_exact) do
-    values(false, is_exact, amount, axis.min, axis.max)
+    false
+    |> values(is_exact, amount, axis.min, axis.max)
     |> Enum.map(&Float.round/1)
   end
 
   # Produce a list of "nice" floats.
   def gen_floats(amount, axis, is_exact) do
-    values(true, is_exact, amount, axis.min, axis.max)
+    true
+    |> values(is_exact, amount, axis.min, axis.max)
     |> Enum.map(&Float.round(&1))
   end
 

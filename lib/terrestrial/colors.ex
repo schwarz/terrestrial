@@ -1,6 +1,6 @@
 defmodule Terrestrial.Colors do
   # TODO Replace these with the closest Tailwind colors
-
+  @moduledoc false
   def pink, do: "#ea60df"
   def purple, do: "#7b4dff"
   def blue, do: "#12a5ed"

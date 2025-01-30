@@ -9,8 +9,7 @@ defmodule Terrestrial.Commands do
   def description(plane, cmds) do
     cmds
     |> Enum.map(fn c -> translate(c, plane) end)
-    |> Enum.map(fn c -> string_command(c) end)
-    |> Enum.join(" ")
+    |> Enum.map_join(" ", fn c -> string_command(c) end)
   end
 
   @spec translate(term(), Terrestrial.Coordinates.plane()) :: term()

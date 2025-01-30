@@ -1,6 +1,9 @@
 defmodule Terrestrial.Svg do
+  @moduledoc false
   use Phoenix.Component
+
   import Terrestrial.Internal, only: [apply_edits: 2]
+
   alias Terrestrial.Coordinates, as: Coords
 
   defmodule Line do
@@ -278,7 +281,8 @@ defmodule Terrestrial.Svg do
   # Returns a random ID with valid DOM tokens
   defp random_id do
     random_b64 =
-      :crypto.strong_rand_bytes(16)
+      16
+      |> :crypto.strong_rand_bytes()
       |> Base.url_encode64()
 
     "trz-"
