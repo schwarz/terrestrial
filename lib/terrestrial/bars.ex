@@ -219,6 +219,7 @@ defmodule Terrestrial.Bars do
         series_items =
           case stack_series_config do
             {:stacked, bar_series_configs} ->
+              # TODO Augment to_y_sum
               number_of_bars_in_stack = length(bar_series_configs)
 
               bar_series_configs
@@ -242,7 +243,7 @@ defmodule Terrestrial.Bars do
                   stack_series_config_index,
                   1,
                   0,
-                  bar_series_config
+                  Map.put(bar_series_config, :to_y_sum, bar_series_config.to_y)
                 )
               ]
           end
