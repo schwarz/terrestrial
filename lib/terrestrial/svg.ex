@@ -2,7 +2,7 @@ defmodule Terrestrial.Svg do
   @moduledoc false
   use Phoenix.Component
 
-  import Terrestrial.Internal, only: [apply_edits: 2]
+  import Terrestrial.Internal, only: [apply_edits: 2, clamp: 3]
 
   alias Terrestrial.Coordinates, as: Coords
 
@@ -276,6 +276,194 @@ defmodule Terrestrial.Svg do
         """
       end
     end
+  end
+
+  def bar(plane, config, point) do
+    highlight_color =
+      case config.highlight_color do
+        "" -> config.color
+        color -> color
+      end
+
+    border_width_cartesian_x = Coords.scale_cartesian_x(plane, config.border_width / 2)
+    border_width_cartesian_y = Coords.scale_cartesian_y(plane, config.border_width / 2)
+
+    pos = %{
+      x1: min(point.x1, point.x2) + border_width_cartesian_x,
+      x2: max(point.x1, point.x2) - border_width_cartesian_x,
+      y1: min(point.y1, point.y2) + border_width_cartesian_y,
+      y2: max(point.y1, point.y2) - border_width_cartesian_y
+    }
+
+    highlight_width_cartesian_x =
+      border_width_cartesian_x +
+        Coords.scale_cartesian_x(plane, config.highlight_width / 2)
+
+    highlight_width_cartesian_y =
+      border_width_cartesian_y +
+        Coords.scale_cartesian_y(plane, config.highlight_width / 2)
+
+    highlight_pos = %{
+      x1: pos.x1 - highlight_width_cartesian_x,
+      x2: pos.x2 + highlight_width_cartesian_x,
+      y1: pos.y1 - highlight_width_cartesian_y,
+      y2: pos.y2 + highlight_width_cartesian_y
+    }
+
+    width = abs(pos.x2 - pos.x1)
+
+    rounding_top =
+      Coords.scale_svg_x(plane, width) * 0.5 * clamp(config.round_top, 0, 1)
+
+    rounding_bottom =
+      Coords.scale_svg_x(plane, width) * 0.5 * clamp(config.round_bottom, 0, 1)
+
+    radius_top_x = Coords.scale_cartesian_x(plane, rounding_top)
+    radius_top_y = Coords.scale_cartesian_y(plane, rounding_top)
+    radius_bottom_x = Coords.scale_cartesian_x(plane, rounding_bottom)
+    radius_bottom_y = Coords.scale_cartesian_y(plane, rounding_bottom)
+
+    height = abs(pos.y2 - pos.y1)
+
+    {round_top, round_bottom} =
+      if(
+        height - radius_top_y * 0.8 - radius_bottom_y * 0.8 <= 0 ||
+          width - radius_top_x * 0.8 - radius_bottom_x * 0.8 <= 0
+      ) do
+        {0, 0}
+      else
+        {config.round_top, config.round_bottom}
+      end
+
+    {commands, highlight_commands} =
+      if pos.y1 == pos.y2 do
+        {[], []}
+      else
+        case {round_top > 0.0, round_bottom > 0.0} do
+          {false, false} ->
+            {[
+               {:move, pos.x1, pos.y1},
+               {:line, pos.x1, pos.y2},
+               {:line, pos.x2, pos.y2},
+               {:line, pos.x2, pos.y1},
+               {:line, pos.x1, pos.y1}
+             ],
+             [
+               {:move, highlight_pos.x1, pos.y1},
+               {:line, highlight_pos.x1, highlight_pos.y2},
+               {:line, highlight_pos.x2, highlight_pos.y2},
+               {:line, highlight_pos.x2, pos.y1},
+               # ^ outer
+               {:line, pos.x2, pos.y1},
+               {:line, pos.x2, pos.y2},
+               {:line, pos.x1, pos.y2},
+               {:line, pos.x1, pos.y1}
+             ]}
+
+          {true, false} ->
+            # TODO Rounded top L973
+            raise "roundness not supported yet"
+            {[], []}
+
+          {false, true} ->
+            # TODO Rounded bottom L998
+            raise "roundness not supported yet"
+            {[], []}
+
+          {true, true} ->
+            # TODO Rounded top and bottom L1024
+            raise "roundness not supported yet"
+            {[], []}
+        end
+      end
+
+    view_bar = fn assigns ->
+      assigns =
+        assign(assigns,
+          path_attrs: config.attrs,
+          plane: plane
+        )
+
+      ~H"""
+      <path
+        {@path_attrs}
+        class="bar"
+        fill={@fill}
+        fill-opacity={@fill_opacity}
+        stroke={@border}
+        stroke-width={@border_width}
+        stroke-opacity={@stroke_opacity}
+        d={Terrestrial.Commands.description(@plane, @cmds)}
+      />
+      """
+    end
+
+    view_aura_bar = fn fill ->
+      fn _ignored_assigns ->
+        assigns =
+          %{
+            fill: fill,
+            fill_opacity: config.opacity,
+            border: config.border,
+            border_width: config.border_width,
+            commands: commands,
+            highlight_color: highlight_color,
+            highlight_commands: highlight_commands,
+            highlight_opacity: config.highlight,
+            view_bar: view_bar
+          }
+
+        if config.highlight == 0 do
+          ~H"""
+          {Phoenix.LiveView.TagEngine.component(
+            @view_bar,
+            [
+              fill: @highlight_color,
+              fill_opacity: @fill_opacity,
+              border: @border,
+              border_width: @border_width,
+              stroke_opacity: 1,
+              cmds: @commands
+            ],
+            {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+          )}
+          """
+        else
+          ~H"""
+          <g class="bar-with-highlight">
+            {Phoenix.LiveView.TagEngine.component(
+              @view_bar,
+              [
+                fill: @highlight_color,
+                fill_opacity: @highlight_opacity,
+                border: "transparent",
+                border_width: 0,
+                stroke_opacity: 0,
+                cmds: @highlight_commands
+              ],
+              {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+            )}
+
+            {Phoenix.LiveView.TagEngine.component(
+              @view_bar,
+              [
+                fill: @fill,
+                fill_opacity: @fill_opacity,
+                border: @border,
+                border_width: @border_width,
+                stroke_opacity: 1,
+                cmds: @commands
+              ],
+              {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+            )}
+          </g>
+          """
+        end
+      end
+    end
+
+    # TODO config.design L1079
+    view_aura_bar.(config.color)
   end
 
   # Returns a random ID with valid DOM tokens

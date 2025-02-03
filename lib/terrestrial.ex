@@ -327,9 +327,11 @@ defmodule Terrestrial do
 
   defmodule Property do
     @moduledoc false
+    def default_to_y_sum(datum), do: datum.y
+
     defstruct stacked: false,
               to_y: &Function.identity/1,
-              to_y_sum: &Function.identity/1,
+              to_y_sum: &Terrestrial.Property.default_to_y_sum/1,
               # Edits for each dot or bar
               presentation_edits: [],
               # Edits for how we connect dots (series only)
@@ -342,6 +344,18 @@ defmodule Terrestrial do
             presentation_edits: list(),
             interpolation_edits: list()
           }
+  end
+
+  @doc """
+  Stack bars or lines.
+  """
+  def stacked(properties) when is_list(properties) do
+    [{:stacked, properties}]
+  end
+
+  def stacked(property) do
+    # Why would you want this?
+    {:stacked, [property]}
   end
 
   @doc """
@@ -383,6 +397,28 @@ defmodule Terrestrial do
     end
 
     {:indexed, with_index}
+  end
+
+  @doc """
+  Add a bar series to your chart.
+  """
+  @spec bars(function(), [Property.t()], list()) :: {:indexed, function()}
+  def bars(edits, properties, data) do
+    with_index = fn index ->
+      {{limits, legends, ticks, view}, new_index} =
+        Terrestrial.Bars.bars(edits, properties, data, index)
+
+      {{:bars_element, limits, legends, ticks, view}, new_index}
+    end
+
+    {:indexed, with_index}
+  end
+
+  def bar(y, edits) do
+    %Property{
+      to_y: y,
+      presentation_edits: edits
+    }
   end
 
   defmodule Dot do
@@ -824,6 +860,7 @@ defmodule Terrestrial do
       case elem do
         {:indexed, _} -> acc
         {:series_element, lims, _, _} -> acc ++ lims
+        {:bars_element, lims, _, _, _} -> acc ++ lims
         {:svg_element, _} -> acc
         {:axis_element, _, _} -> acc
         {:grid_element, _} -> acc
@@ -906,6 +943,7 @@ defmodule Terrestrial do
         {:axis_element, _, _} -> acc
         # TODO we return no items atm
         {:series_element, _, _, _} -> acc ++ []
+        {:bars_element, _, _, _, _} -> acc ++ []
         {:grid_element, _} -> acc
         {:ticks_element, _, _} -> acc
         {:labels_element, _, _, _} -> acc
@@ -922,6 +960,7 @@ defmodule Terrestrial do
         {:svg_element, _} -> acc
         {:axis_element, _, _} -> acc
         {:series_element, _, legends, _} -> acc ++ legends
+        {:bars_element, _, legends, _, _} -> acc ++ legends
         {:grid_element, _} -> acc
         {:ticks_element, _, _} -> acc
         {:labels_element, _, _, _} -> acc
@@ -943,6 +982,7 @@ defmodule Terrestrial do
         {:svg_element, _} -> acc
         {:axis_element, func, _} -> func.(plane, acc)
         {:series_element, _, _, _} -> acc
+        {:bars_element, _, _, func, _} -> func.(plane, acc)
         {:grid_element, _} -> acc
         {:ticks_element, func, _} -> func.(plane, acc)
         {:labels_element, to_c, func, _} -> func.(plane, to_c.(plane), acc)
@@ -958,6 +998,9 @@ defmodule Terrestrial do
     view_one = fn elem, {before, chart_, after_} ->
       case elem do
         {:series_element, _, _, view} ->
+          {before, [view.(plane)] ++ chart_, after_}
+
+        {:bars_element, _, _, _, view} ->
           {before, [view.(plane)] ++ chart_, after_}
 
         {:axis_element, _, view} ->

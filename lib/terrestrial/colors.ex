@@ -16,6 +16,7 @@ defmodule Terrestrial.Colors do
   def brown, do: "#871c1c"
   def mint, do: "#6df0d2"
   def yellow, do: "#ffca00"
+  def academy_yellow, do: "#fed40a"
   def gray, do: "#eff2fa"
   def dark_gray, do: "rgb(200 200 200)"
   def label_gray, do: "#808bab"

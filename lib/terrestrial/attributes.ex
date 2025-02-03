@@ -18,6 +18,9 @@ defmodule Terrestrial.Attributes do
     fn %{format: _} = config -> Map.put(config, :format, func) end
   end
 
+  @doc """
+  Set a custom color.
+  """
   @spec color(String.t()) :: (map() -> map())
   def color(c) do
     fn %{color: _} = config ->
@@ -152,8 +155,7 @@ defmodule Terrestrial.Attributes do
   """
   @spec zero(Terrestrial.Coordinates.axis()) :: float()
   def zero(%{min: _, max: _} = a) do
-    # clamp
-    0 |> max(a.min) |> min(a.max)
+    Terrestrial.Internal.clamp(0, a.min, a.max)
   end
 
   @doc """
@@ -267,6 +269,40 @@ defmodule Terrestrial.Attributes do
     end
   end
 
+  @doc """
+  v is percentage of bin width, e.g. 0.4
+  """
+  @spec margin(float()) :: (map() -> map())
+  def margin(v) do
+    fn %{margin: _} = config -> Map.put(config, :margin, v) end
+  end
+
+  @spec spacing(float()) :: (map() -> map())
+  def spacing(v) do
+    fn %{spacing: _} = config -> Map.put(config, :spacing, v) end
+  end
+
+  @doc """
+  v is percentage (0.0 to 1.0)
+  """
+  @spec round_top(float()) :: (map() -> map())
+  def round_top(v) when v >= 0.0 and v <= 1.0 do
+    fn %{round_top: _} = config -> Map.put(config, :round_top, v) end
+  end
+
+  @doc """
+  v is percentage expressed as float (0.0 to 1.0)
+  """
+  @spec round_bottom(float()) :: (map() -> map())
+  def round_bottom(v) when v >= 0.0 and v <= 1.0 do
+    fn %{round_bottom: _} = config -> Map.put(config, :round_bottom, v) end
+  end
+
+  @spec ungroup() :: (map() -> map())
+  def ungroup do
+    fn %{grouped: _} = config -> Map.put(config, :grouped, false) end
+  end
+
   # COLORS
 
   def pink, do: Terrestrial.Colors.pink()
@@ -281,6 +317,7 @@ defmodule Terrestrial.Attributes do
   def brown, do: Terrestrial.Colors.brown()
   def mint, do: Terrestrial.Colors.mint()
   def yellow, do: Terrestrial.Colors.yellow()
+  def academy_yellow, do: Terrestrial.Colors.academy_yellow()
   def gray, do: Terrestrial.Colors.gray()
   def dark_gray, do: Terrestrial.Colors.dark_gray()
   def label_gray, do: Terrestrial.Colors.label_gray()
