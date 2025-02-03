@@ -118,7 +118,7 @@ defmodule Terrestrial.Bars do
       length = end_ - start
       margin = length * bars_config.margin
       spacing = length * bars_config.spacing
-      width = length - margin * 2 - (number_of_stacks - 1) * spacing / number_of_stacks
+      width = (length - margin * 2 - (number_of_stacks - 1) * spacing) / number_of_stacks
 
       offset =
         if bars_config.grouped do
