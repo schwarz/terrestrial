@@ -20,6 +20,9 @@ defmodule Terrestrial.Commands do
 
       {:line, x, y} ->
         {:line, to_svg_x(x, plane), to_svg_y(y, plane)}
+
+      {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y} ->
+        {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, to_svg_x(x, plane), to_svg_y(y, plane)}
     end
   end
 
@@ -31,6 +34,19 @@ defmodule Terrestrial.Commands do
 
       {:line, x, y} ->
         "L" <> point_to_string(x, y)
+
+      {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y} ->
+        "A " <>
+          Enum.join(
+            [
+              point_to_string(rx, ry),
+              to_string(x_axis_rotation),
+              boolean_to_integer_string(large_arc_flag),
+              boolean_to_integer_string(sweep_flag),
+              point_to_string(x, y)
+            ],
+            " "
+          )
 
       _ ->
         raise "command not yet implemented"
@@ -50,5 +66,5 @@ defmodule Terrestrial.Commands do
   # end
 
   # defp boolean_to_string(bool), do: if(bool, do: "True", else: "False")
-  # defp boolean_to_integer_string(bool), do: if(bool, do: "1", else: "0")
+  defp boolean_to_integer_string(bool), do: if(bool, do: "1", else: "0")
 end

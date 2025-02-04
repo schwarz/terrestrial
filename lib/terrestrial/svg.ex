@@ -361,19 +361,94 @@ defmodule Terrestrial.Svg do
              ]}
 
           {true, false} ->
-            # TODO Rounded top L973
-            raise "roundness not supported yet"
-            {[], []}
+            {[
+               {:move, pos.x1, pos.y1},
+               {:line, pos.x1, pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, true, pos.x1 + radius_top_x, pos.y2},
+               {:line, pos.x2 - radius_top_x, pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, true, pos.x2, pos.y2 - radius_top_y},
+               {:line, pos.x2, pos.y1},
+               {:line, pos.x1, pos.y1}
+             ],
+             [
+               {:move, highlight_pos.x1, pos.y1},
+               {:line, highlight_pos.x1, highlight_pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, true, highlight_pos.x1 + radius_top_x, highlight_pos.y2},
+               {:line, highlight_pos.x2 - radius_top_x, highlight_pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, true, highlight_pos.x2, highlight_pos.y2 - radius_top_y},
+               {:line, highlight_pos.x2, pos.y1},
+               # ^ outer
+               {:line, pos.x2, pos.y1},
+               {:line, pos.x2, pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, false, pos.x2 - radius_top_x, pos.y2},
+               {:line, pos.x1 + radius_top_x, pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, false, pos.x1, pos.y2 - radius_top_y},
+               {:line, pos.x1, pos.y1}
+             ]}
 
           {false, true} ->
-            # TODO Rounded bottom L998
-            raise "roundness not supported yet"
-            {[], []}
+            {[
+               {:move, pos.x1 + radius_bottom_x, pos.y1},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, pos.x1, pos.y1 + radius_bottom_y},
+               {:line, pos.x1, pos.y2},
+               {:line, pos.x2, pos.y2},
+               {:line, pos.x2, pos.y1 + radius_bottom_y},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, pos.x2 - radius_bottom_x, pos.y1},
+               {:line, pos.x1 + radius_bottom_x, pos.y1}
+             ],
+             [
+               {:move, highlight_pos.x1 + radius_bottom_x, highlight_pos.y1},
+               {:arc, rounding_bottom, round_bottom, -45, false, true, highlight_pos.x1,
+                highlight_pos.y1 + radius_bottom_y},
+               {:line, highlight_pos.x1, highlight_pos.y2},
+               {:line, highlight_pos.x2, highlight_pos.y2},
+               {:line, highlight_pos.x2, highlight_pos.y1 + radius_bottom_y},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, highlight_pos.x2 - radius_bottom_x,
+                highlight_pos.y1},
+               {:line, highlight_pos.x1 + radius_bottom_x, highlight_pos.y1},
+               # ^ outer
+               {:line, pos.x2 - radius_bottom_x, pos.y1},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, false, pos.x2, pos.y1 + radius_bottom_y},
+               {:line, pos.x2, pos.y2},
+               {:line, pos.x1, pos.y2},
+               {:line, pos.x1, pos.y1 + radius_bottom_y},
+               {:line, pos.x2, pos.y1}
+             ]}
 
           {true, true} ->
-            # TODO Rounded top and bottom L1024
-            raise "roundness not supported yet"
-            {[], []}
+            {[
+               {:move, pos.x1 + radius_bottom_x, pos.y1},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, pos.x1, pos.y1 + radius_bottom_y},
+               {:line, pos.x1, pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, true, pos.x1 + radius_top_x, pos.y2},
+               {:line, pos.x2 - radius_top_x, pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, true, pos.x2, pos.y2 - radius_top_y},
+               {:line, pos.x2, pos.y1 + radius_bottom_y},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, pos.x2 - radius_bottom_x, pos.y1},
+               {:line, pos.x1 + radius_bottom_x, pos.y1}
+             ],
+             [
+               {:move, highlight_pos.x1 + radius_bottom_x, highlight_pos.y1},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, highlight_pos.x1,
+                highlight_pos.y1 + radius_bottom_y},
+               {:line, highlight_pos.x1, highlight_pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, true, highlight_pos.x1 + radius_top_x, highlight_pos.y2},
+               {:line, highlight_pos.x2 - radius_top_x, highlight_pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, true, highlight_pos.x2, highlight_pos.y2 - radius_top_y},
+               {:line, highlight_pos.x2, highlight_pos.y1 + radius_bottom_y},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, true, highlight_pos.x2 - radius_bottom_x,
+                highlight_pos.y1},
+               {:line, highlight_pos.x1 + radius_bottom_x, highlight_pos.y1},
+               # ^ outer
+               {:line, pos.x2 - radius_bottom_x, pos.y1},
+               {:arc, rounding_bottom, rounding_bottom, -45, false, false, pos.x2, pos.y1 + radius_bottom_y},
+               {:line, pos.x2, pos.y2 - radius_top_y},
+               {:arc, rounding_top, rounding_top, -45, false, false, pos.x2 - radius_top_x, pos.y2},
+               {:line, pos.x1 + radius_top_x, pos.y2},
+               {:arc, rounding_top, rounding_top, -45, false, false, pos.x1, pos.y2 - radius_top_y},
+               {:line, pos.x1, pos.y1 + radius_bottom_y},
+               {:line, pos.x2, pos.y1}
+             ]}
         end
       end
 
