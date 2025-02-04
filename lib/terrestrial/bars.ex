@@ -225,13 +225,26 @@ defmodule Terrestrial.Bars do
               bar_series_configs
               |> Enum.with_index()
               |> Enum.map(fn {bar_series_config, bar_series_config_index} ->
+                # TODO Inefficient, replace with a reduce
+                previous_configs =
+                  case bar_series_config_index do
+                    0 -> []
+                    n -> Enum.take(bar_series_configs, n)
+                  end
+
+                to_y_sum = fn datum ->
+                  Enum.reduce(previous_configs, 0, fn config, acc ->
+                    config.to_y.(datum) + acc
+                  end) + bar_series_config.to_y.(datum)
+                end
+
                 for_each_bar_series_config.(
                   bins,
                   absolute_index,
                   stack_series_config_index,
                   number_of_bars_in_stack,
                   bar_series_config_index,
-                  bar_series_config
+                  Map.put(bar_series_config, :to_y_sum, to_y_sum)
                 )
               end)
 

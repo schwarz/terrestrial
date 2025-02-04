@@ -350,7 +350,7 @@ defmodule Terrestrial do
   Stack bars or lines.
   """
   def stacked(properties) when is_list(properties) do
-    [{:stacked, properties}]
+    {:stacked, properties}
   end
 
   def stacked(property) do
