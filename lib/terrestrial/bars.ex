@@ -6,6 +6,7 @@ defmodule Terrestrial.Bars do
 
   alias Terrestrial.Attributes, as: CA
   alias Terrestrial.Coordinates, as: Coords
+  alias Terrestrial.Item
 
   defstruct spacing: 0.05, margin: 0.1, round_top: 0, round_bottom: 0, grouped: true, grid: false, x1: nil, x2: nil
   @typedoc "Config for Bars"
@@ -35,27 +36,6 @@ defmodule Terrestrial.Bars do
               highlight_color: ""
   end
 
-  defmodule Item do
-    @moduledoc false
-    defstruct render: nil,
-              limits: nil,
-              to_position: nil,
-              presentation: nil,
-              color: "",
-              datum: nil,
-              x1: 0.0,
-              x2: 0.0,
-              y: 0.0,
-              identification: %{
-                property_index: 0,
-                dot_item_index: 0
-              }
-  end
-
-  def render_item(item, plane) do
-    item.render.(plane, item.to_position.(plane))
-  end
-
   # type alias Identification =
   # { stackIndex : Int      -- Index of the stack.
   # , seriesIndex : Int     -- Index of the series within a stack.
@@ -73,7 +53,7 @@ defmodule Terrestrial.Bars do
         <g class="series">
           <%= for item <- @items do %>
             {Phoenix.LiveView.TagEngine.component(
-              render_item(item, @plane),
+              Item.render_item(item, @plane),
               [],
               {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
             )}
@@ -276,7 +256,7 @@ defmodule Terrestrial.Bars do
         <g class="bar-series">
           <%= for item <- @items do %>
             {Phoenix.LiveView.TagEngine.component(
-              render_item(item, @plane),
+              Item.render_item(item, @plane),
               [],
               {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
             )}

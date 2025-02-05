@@ -6,23 +6,7 @@ defmodule Terrestrial.Series do
 
   alias Terrestrial.Attributes, as: CA
   alias Terrestrial.Coordinates, as: Coords
-
-  defmodule Item do
-    @moduledoc false
-    defstruct render: nil,
-              limits: nil,
-              to_position: nil,
-              presentation: nil,
-              color: "",
-              datum: nil,
-              x1: 0.0,
-              x2: 0.0,
-              y: 0.0,
-              identification: %{
-                property_index: 0,
-                dot_item_index: 0
-              }
-  end
+  alias Terrestrial.Item
 
   def series(to_x, properties, data, starting_index) do
     # take our data and go over each property, calling to_x and to_y for each, increasing the index for each as well
