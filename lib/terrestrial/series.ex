@@ -86,7 +86,11 @@ defmodule Terrestrial.Series do
         view = fn plane ->
           fn _ignored_assigns ->
             {first, commands, _} =
-              to_commands(interpolation_config.method, to_x, property.to_y, data)
+              if interpolation_config.method == nil do
+                {nil, [], nil}
+              else
+                to_commands(interpolation_config.method, to_x, property.to_y, data)
+              end
 
             assigns = %{
               plane: plane,
