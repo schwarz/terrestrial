@@ -116,11 +116,21 @@ defmodule Terrestrial.Svg do
         }
 
       # TODO Highlights
-      ~H"""
-      <g class="dot-container">
-        <circle cx={@x} cy={@y} r={@radius} {@dot_config} />
-      </g>
-      """
+      case config.shape do
+        :circle ->
+          ~H"""
+          <g class="dot-container">
+            <circle cx={@x} cy={@y} r={@radius} {@dot_config} />
+          </g>
+          """
+
+        nil ->
+          ~H"""
+          """
+
+        _ ->
+          raise "shape not yet supported"
+      end
     end
   end
 
