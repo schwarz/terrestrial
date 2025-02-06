@@ -2,5 +2,6 @@
 [
   plugins: [Phoenix.LiveView.HTMLFormatter, Styler],
   inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"],
-  locals_without_parens: [attr: 3]
+  locals_without_parens: [attr: 3],
+  line_length: 98
 ]

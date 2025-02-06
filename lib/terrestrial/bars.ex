@@ -8,7 +8,15 @@ defmodule Terrestrial.Bars do
   alias Terrestrial.Coordinates, as: Coords
   alias Terrestrial.Item
 
-  defstruct spacing: 0.05, margin: 0.1, round_top: 0, round_bottom: 0, grouped: true, grid: false, x1: nil, x2: nil
+  defstruct spacing: 0.05,
+            margin: 0.1,
+            round_top: 0,
+            round_bottom: 0,
+            grouped: true,
+            grid: false,
+            x1: nil,
+            x2: nil
+
   @typedoc "Config for Bars"
   @type t() :: %__MODULE__{
           spacing: float(),
@@ -195,7 +203,8 @@ defmodule Terrestrial.Bars do
 
     {_, _, items} =
       Enum.reduce(properties, {element_index, 0, []}, fn stack_series_config,
-                                                         {absolute_index, stack_series_config_index, items} ->
+                                                         {absolute_index,
+                                                          stack_series_config_index, items} ->
         series_items =
           case stack_series_config do
             {:stacked, bar_series_configs} ->
@@ -241,7 +250,8 @@ defmodule Terrestrial.Bars do
               ]
           end
 
-        {absolute_index + length(series_items), stack_series_config_index + 1, items ++ series_items}
+        {absolute_index + length(series_items), stack_series_config_index + 1,
+         items ++ series_items}
       end)
 
     legends = []

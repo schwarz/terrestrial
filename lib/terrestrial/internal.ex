@@ -12,7 +12,12 @@ defmodule Terrestrial.Internal do
   """
   def with_surround(list, nil_element \\ nil) when is_list(list) do
     count = length(list)
-    Enum.zip([[nil_element | Enum.take(list, count - 1)], list, Enum.drop(list, 1) ++ [nil_element]])
+
+    Enum.zip([
+      [nil_element | Enum.take(list, count - 1)],
+      list,
+      Enum.drop(list, 1) ++ [nil_element]
+    ])
   end
 
   def clamp(n, min, max) do

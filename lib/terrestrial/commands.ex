@@ -22,7 +22,8 @@ defmodule Terrestrial.Commands do
         {:line, to_svg_x(x, plane), to_svg_y(y, plane)}
 
       {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y} ->
-        {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, to_svg_x(x, plane), to_svg_y(y, plane)}
+        {:arc, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, to_svg_x(x, plane),
+         to_svg_y(y, plane)}
     end
   end
 
