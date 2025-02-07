@@ -109,10 +109,13 @@ defmodule Terrestrial.Svg do
     fn _ignored_assigns ->
       assigns =
         %{
-          x: Float.to_string(scaled_x),
-          y: Float.to_string(scaled_y),
+          x: scaled_x,
+          y: scaled_y,
           radius: :math.sqrt(area / :math.pi()),
-          dot_config: attrs_style
+          dot_config: attrs_style,
+          area: area,
+          # TODO off
+          off: 0
         }
 
       # TODO Highlights
@@ -124,6 +127,54 @@ defmodule Terrestrial.Svg do
           </g>
           """
 
+        :triangle ->
+          ~H"""
+          <path d={triangle_path(@area, @off, @x, @y)} {@dot_config} />
+          """
+
+        :square ->
+          assigns =
+            assigns
+            |> Map.put(:side, :math.sqrt(area))
+            |> Map.put(:side_off, :math.sqrt(area) + assigns.off)
+
+          ~H"""
+          <rect
+            x={@x - @side_off / 2}
+            y={@y - @side_off / 2}
+            width={@side_off}
+            height={@side_off}
+            {@dot_config}
+          />
+          """
+
+        :diamond ->
+          assigns =
+            assigns
+            |> Map.put(:side, :math.sqrt(area))
+            |> Map.put(:side_off, :math.sqrt(area) + assigns.off)
+
+          ~H"""
+          <rect
+            x={@x - @side_off / 2}
+            y={@y - @side_off / 2}
+            width={@side_off}
+            height={@side_off}
+            transform={"rotate(45 #{@x} #{@y})"}
+            {@dot_config}
+          />
+          """
+
+        :plus ->
+          ~H"""
+          <path d={plus_path(@area, @off, @x, @y)} {@dot_config} />
+          """
+
+        :cross ->
+          ~H"""
+          <path d={plus_path(@area, @off, @x, @y)} transform={"rotate(45 #{@x} #{@y})"} {@dot_config} />
+          """
+
         nil ->
           ~H"""
           """
@@ -132,6 +183,52 @@ defmodule Terrestrial.Svg do
           raise "shape not yet supported"
       end
     end
+  end
+
+  defp plus_path(area, off, x, y) do
+    side = :math.sqrt(area / 4) + off
+    r3 = side
+    r6 = side / 2
+
+    Enum.join(
+      [
+        "M#{x - r6} #{y - r3 - r6 + off}",
+        "v#{r3 - off}",
+        "h#{-r3 + off}",
+        "v#{r3}",
+        "h#{r3 - off}",
+        "v#{r3 - off}",
+        "h#{r3}",
+        "v#{-r3 + off}",
+        "h#{r3 - off}",
+        "v#{-r3}",
+        "h#{-r3 + off}",
+        "v#{-r3 + off}",
+        "h#{-r3}",
+        "v#{r3 - off}"
+      ],
+      " "
+    )
+  end
+
+  defp triangle_path(area, off, x, y) do
+    side = :math.sqrt(area * 4 / :math.sqrt(3)) + off * :math.sqrt(3)
+    height = :math.sqrt(3) * side / 2
+    from_middle = height - :math.tan(degrees_to_radians(30)) * side / 2
+
+    Enum.join(
+      [
+        "M#{x} #{y - from_middle}",
+        "l#{-side / 2} #{height}",
+        "h#{side}",
+        "z"
+      ],
+      " "
+    )
+  end
+
+  defp degrees_to_radians(deg) do
+    deg / (180 / :math.pi())
   end
 
   def container(_plane, config, _before_elems, chart_elems, _after_elems) do
