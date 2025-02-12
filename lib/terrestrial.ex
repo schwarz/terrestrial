@@ -328,21 +328,23 @@ defmodule Terrestrial do
   defmodule Property do
     @moduledoc false
     def default_to_y_sum(datum), do: datum.y
+    def default_variation(_, _), do: []
 
-    defstruct stacked: false,
-              to_y: &Function.identity/1,
+    defstruct to_y: &Function.identity/1,
               to_y_sum: &Terrestrial.Property.default_to_y_sum/1,
               # Edits for each dot or bar
               presentation_edits: [],
               # Edits for how we connect dots (series only)
-              interpolation_edits: []
+              interpolation_edits: [],
+              # Adjust individual presentation based on identification and datum
+              variation: &Terrestrial.Property.default_variation/2
 
     @type t :: %{
-            stacked: false,
             to_y: function(),
             to_y_sum: function(),
             presentation_edits: list(),
-            interpolation_edits: list()
+            interpolation_edits: list(),
+            variation: (any(), any() -> list()) | nil
           }
   end
 
@@ -364,7 +366,6 @@ defmodule Terrestrial do
   @spec scatter((any() -> float()), list()) :: Property.t()
   def scatter(to_y, dot_edits) when is_function(to_y, 1) do
     %Property{
-      stacked: false,
       to_y: to_y,
       interpolation_edits: [],
       presentation_edits: dot_edits
@@ -377,7 +378,6 @@ defmodule Terrestrial do
   @spec interpolated((any() -> float()), list(), list()) :: Property.t()
   def interpolated(to_y, dot_edits, interpolation_edits) when is_function(to_y, 1) do
     %Property{
-      stacked: false,
       to_y: to_y,
       interpolation_edits: [CA.linear() | interpolation_edits],
       presentation_edits: dot_edits
@@ -445,9 +445,30 @@ defmodule Terrestrial do
             highlight: String.t(),
             highlight_width: float(),
             highlight_color: String.t(),
-            shape: shape(),
+            shape: shape() | nil,
             hide_overflow: boolean()
           }
+  end
+
+  @doc """
+  Change the style of a bar or dot based on the index of its data point and the data point itself.
+  """
+  @spec variation(
+          Terrestrial.Property.t(),
+          (Terrestrial.Item.Identification.t(), any() -> Terrestrial.Property.t())
+        ) ::
+          Terrestrial.Property.t()
+  def variation(property, new_variation) do
+    update_func = fn config ->
+      Map.put(config, :variation, fn id, datum ->
+        config.variation.(id, datum) ++ new_variation.(id, datum)
+      end)
+    end
+
+    case property do
+      {:stacked, props} -> {:stacked, Enum.map(props, update_func)}
+      config -> update_func.(config)
+    end
   end
 
   defmodule Tick do

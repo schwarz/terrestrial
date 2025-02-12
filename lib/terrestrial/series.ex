@@ -23,23 +23,29 @@ defmodule Terrestrial.Series do
             ]
           )
 
+        basic_edits = [
+          CA.color(interpolation_config.color),
+          CA.border(interpolation_config.color),
+          case interpolation_config.method do
+            nil -> CA.circle()
+            _ -> CA.no_change()
+          end
+        ]
+
         dot_items =
           for {datum, dot_item_index} <- Enum.with_index(data) do
+            # TODO Identification
+            identification = :todo
+
             x = to_x.(datum)
             y = property.to_y.(datum)
 
             dot_config =
               Terrestrial.Internal.apply_edits(
                 %Terrestrial.Dot{},
-                [
-                  CA.color(interpolation_config.color),
-                  CA.border(interpolation_config.color),
-                  if(interpolation_config.method == nil,
-                    do: CA.circle(),
-                    else: CA.no_change()
-                  )
-                ] ++
-                  property.presentation_edits
+                basic_edits ++
+                  property.presentation_edits ++
+                  property.variation.(identification, datum)
               )
 
             %Item{

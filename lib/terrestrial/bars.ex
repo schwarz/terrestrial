@@ -44,14 +44,6 @@ defmodule Terrestrial.Bars do
               highlight_color: ""
   end
 
-  # type alias Identification =
-  # { stackIndex : Int      -- Index of the stack.
-  # , seriesIndex : Int     -- Index of the series within a stack.
-  # , absoluteIndex : Int   -- Index of series within the total set of series.
-  # , dataIndex : Int       -- Index of data point within data.
-  # , elementIndex : Int    -- Index of element within chart.
-  # }
-
   def bars(edits, properties, data, element_index) do
     view_bar_series = fn plane, items ->
       fn _ignored_assigns ->
@@ -90,7 +82,7 @@ defmodule Terrestrial.Bars do
                              bar_series_config,
                              data_index,
                              bin ->
-      identification = %{
+      identification = %Terrestrial.Item.Identification{
         stack_index: stack_series_config_index,
         series_index: bar_series_config_index,
         absolute_index: absolute_index,
@@ -145,10 +137,13 @@ defmodule Terrestrial.Bars do
         CA.border(default_color)
       ]
 
-      # TODO Variation
       bar_presentation_config =
         %Bar{}
-        |> apply_edits(basic_edits ++ bar_series_config.presentation_edits)
+        |> apply_edits(
+          basic_edits ++
+            bar_series_config.presentation_edits ++
+            bar_series_config.variation.(identification, bin.datum)
+        )
         |> maybe_update_color_if_gradient(default_color)
         |> maybe_update_border(default_color)
 
