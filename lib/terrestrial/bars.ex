@@ -251,7 +251,7 @@ defmodule Terrestrial.Bars do
 
     legends = []
 
-    to_limits = Enum.map(items, fn item -> item.limits end)
+    to_limits = Enum.map(items, fn item -> Item.get_limits(item) end)
 
     view = fn plane ->
       fn _ignored_assigns ->

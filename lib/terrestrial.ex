@@ -52,8 +52,11 @@ defmodule Terrestrial do
           height: 300,
           margin: %{top: 0, bottom: 0, left: 0, right: 0},
           padding: %{top: 0, bottom: 0, left: 0, right: 0},
+          responsive: true,
           range: [],
-          domain: []
+          domain: [],
+          attrs: [style: "overflow: visible;"],
+          html_attrs: []
         },
         assigns.edits
       )
@@ -89,7 +92,13 @@ defmodule Terrestrial do
       view_elements(config, plane, tick_values, items, legends_, elements)
 
     Phoenix.LiveView.TagEngine.component(
-      Terrestrial.Svg.container(plane, config, before_elems, chart_elems, after_elems),
+      Terrestrial.Svg.container(
+        plane,
+        %{attrs: config.attrs, html_attrs: config.html_attrs, responsive: config.responsive},
+        before_elems,
+        chart_elems,
+        after_elems
+      ),
       [],
       {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
     )
@@ -873,6 +882,75 @@ defmodule Terrestrial do
     end
   end
 
+  @doc """
+  Add arbitrary SVG to the chart.
+  `func` must take a plane and return a function component.
+  The returned function must accept an assigns map, even if it's unused.
+  """
+  def svg(func) do
+    {:svg_element,
+     fn p ->
+       fn _ignored_assigns ->
+         assigns = %{p: p, func: func}
+
+         ~H"""
+         {Phoenix.LiveView.TagEngine.component(
+           @func.(@p),
+           [],
+           {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+         )}
+         """
+       end
+     end}
+  end
+
+  @doc """
+  Add arbitrary SVG to the chart at a specific location.
+  `func` must take a plane and return a function component.
+  The returned function must accept an assigns map, even if it's unused.
+  """
+  def svg_at(to_x, to_y, x_off, y_off, func) do
+    {:svg_element,
+     fn p ->
+       fn _ignored_assigns ->
+         assigns = %{p: p, to_x: to_x, to_y: to_y, x_off: x_off, y_off: y_off, func: func}
+
+         ~H"""
+         <g transform={
+           Terrestrial.Svg.position_transform(@p, 0, @to_x.(@p.x), @to_y.(@p.y), @x_off, @y_off)
+         }>
+           {Phoenix.LiveView.TagEngine.component(
+             @func.(@p),
+             [],
+             {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+           )}
+         </g>
+         """
+       end
+     end}
+  end
+
+  @doc """
+  Add arbitrary HTML to the chart.
+  `func` must take a plane and return a function component.
+  The returned function must accept an assigns map, even if it's unused.
+  """
+  def html(func) do
+    {:html_element, fn p -> func.(p) end}
+  end
+
+  @doc """
+  Add arbitrary HTML to the chart at a specific location.
+  `func` must take a plane and return a function component.
+  The returned function must accept an assigns map, even if it's unused.
+  """
+  def html_at(to_x, to_y, x_off, y_off, attrs, func) do
+    {:html_element,
+     fn p, _ ->
+       Terrestrial.Svg.position_html(p, to_x.(p.x), to_y.(p.y), x_off, y_off, attrs, func)
+     end}
+  end
+
   # container config
   # returns the plane we need
   @spec define_plane(map(), list()) :: Coords.plane()
@@ -882,11 +960,12 @@ defmodule Terrestrial do
         {:indexed, _} -> acc
         {:series_element, lims, _, _} -> acc ++ lims
         {:bars_element, lims, _, _, _} -> acc ++ lims
-        {:svg_element, _} -> acc
         {:axis_element, _, _} -> acc
         {:grid_element, _} -> acc
         {:ticks_element, _, _} -> acc
         {:labels_element, _, _, _} -> acc
+        {:svg_element, _} -> acc
+        {:html_element, _} -> acc
         _ -> raise "unhandled element"
       end
     end
@@ -960,7 +1039,6 @@ defmodule Terrestrial do
   defp get_items(_plane, elements) do
     to_items = fn elem, acc ->
       case elem do
-        {:svg_element, _} -> acc
         {:axis_element, _, _} -> acc
         # TODO we return no items atm
         {:series_element, _, _, _} -> acc ++ []
@@ -968,6 +1046,8 @@ defmodule Terrestrial do
         {:grid_element, _} -> acc
         {:ticks_element, _, _} -> acc
         {:labels_element, _, _, _} -> acc
+        {:svg_element, _} -> acc
+        {:html_element, _} -> acc
         _ -> raise "unhandled element"
       end
     end
@@ -978,13 +1058,14 @@ defmodule Terrestrial do
   defp get_legends(elements) do
     to_legend = fn elem, acc ->
       case elem do
-        {:svg_element, _} -> acc
         {:axis_element, _, _} -> acc
         {:series_element, _, legends, _} -> acc ++ legends
         {:bars_element, _, legends, _, _} -> acc ++ legends
         {:grid_element, _} -> acc
         {:ticks_element, _, _} -> acc
         {:labels_element, _, _, _} -> acc
+        {:svg_element, _} -> acc
+        {:html_element, _} -> acc
         _ -> raise "unhandled element"
       end
     end
@@ -1000,13 +1081,14 @@ defmodule Terrestrial do
   defp get_tick_values(plane, _items, elements) do
     to_values = fn elem, acc ->
       case elem do
-        {:svg_element, _} -> acc
         {:axis_element, func, _} -> func.(plane, acc)
         {:series_element, _, _, _} -> acc
         {:bars_element, _, _, func, _} -> func.(plane, acc)
         {:grid_element, _} -> acc
         {:ticks_element, func, _} -> func.(plane, acc)
         {:labels_element, to_c, func, _} -> func.(plane, to_c.(plane), acc)
+        {:svg_element, _} -> acc
+        {:html_element, _} -> acc
         _ -> raise "unhandled element"
       end
     end
@@ -1014,30 +1096,47 @@ defmodule Terrestrial do
     Enum.reduce(elements, %TickValues{}, to_values)
   end
 
-  defp view_elements(_config, plane, tick_values, _all_items, _all_legends, elements) do
+  defp view_elements(_config, plane, tick_values, _all_items, all_legends, elements) do
     # TODO all_items is currently unused, it's used for elements we don't support
-    view_one = fn elem, {before, chart_, after_} ->
+    view_one = fn elem, {above, chart_, below} ->
       case elem do
         {:series_element, _, _, view} ->
-          {before, [view.(plane)] ++ chart_, after_}
+          {above, [view.(plane)] ++ chart_, below}
 
         {:bars_element, _, _, _, view} ->
-          {before, [view.(plane)] ++ chart_, after_}
+          {above, [view.(plane)] ++ chart_, below}
 
         {:axis_element, _, view} ->
-          {before, [view.(plane)] ++ chart_, after_}
-
-        {:svg_element, view} ->
-          {before, [view.(plane)] ++ chart_, after_}
+          {above, [view.(plane)] ++ chart_, below}
 
         {:grid_element, view} ->
-          {before, [view.(plane, tick_values)] ++ chart_, after_}
+          {above, [view.(plane, tick_values)] ++ chart_, below}
 
         {:ticks_element, _, view} ->
-          {before, [view.(plane)] ++ chart_, after_}
+          {above, [view.(plane)] ++ chart_, below}
 
         {:labels_element, to_c, _, view} ->
-          {before, [view.(plane, to_c.(plane))] ++ chart_, after_}
+          {above, [view.(plane, to_c.(plane))] ++ chart_, below}
+
+        {:svg_element, view} ->
+          {above, [view.(plane) | chart_], below}
+
+        {:html_element, view} ->
+          new_above =
+            if length(chart_) > 0 do
+              [view.(plane, all_legends) | above]
+            else
+              above
+            end
+
+          new_below =
+            if length(chart_) > 0 do
+              below
+            else
+              [view.(plane, all_legends) | below]
+            end
+
+          {new_above, chart_, new_below}
 
         _ ->
           raise "unhandled element"

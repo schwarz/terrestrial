@@ -231,32 +231,104 @@ defmodule Terrestrial.Svg do
     deg / (180 / :math.pi())
   end
 
-  def container(_plane, config, _before_elems, chart_elems, _after_elems) do
+  defmodule Container do
+    @moduledoc false
+    defstruct attrs: [style: "overflow: visible;"], html_attrs: [], responsive: true, events: []
+  end
+
+  def container(plane, config, above_elems, chart_elems, below_elems) do
+    html_attrs_default = [class: "trz-container-inner"]
+
+    html_attrs_size =
+      if config.responsive do
+        [style: "width: 100%; height: 100%;"]
+      else
+        [style: "width: #{plane.x.length}px; height: #{plane.y.length}px;"]
+      end
+
+    html_attrs =
+      config.html_attrs
+      |> Keyword.merge(html_attrs_default)
+      |> Keyword.merge(html_attrs_size, fn _k, v1, v2 ->
+        v1 <> v2
+      end)
+
+    svg_attrs_size =
+      if config.responsive do
+        [viewBox: "0 0 #{plane.x.length} #{plane.y.length}", style: "display: block;"]
+      else
+        [width: "#{plane.x.length}", height: "#{plane.y.length}", style: "display: block;"]
+      end
+
+    chart_position = [
+      x: plane.x.margin_min,
+      y: plane.y.margin_min,
+      width: Coords.inner_width(plane),
+      height: Coords.inner_height(plane),
+      fill: "transparent"
+    ]
+
+    clip_path_defs =
+      fn _ignored_param ->
+        assigns = %{chart_position: chart_position, clip_id: Coords.to_id(plane)}
+
+        ~H"""
+        <defs>
+          <clipPath id={@clip_id}>
+            <rect {@chart_position}></rect>
+          </clipPath>
+        </defs>
+        """
+      end
+
     fn _assigns ->
       assigns = %{
         config: config,
         chart_elems: chart_elems,
-        id: random_id()
+        above_elems: above_elems,
+        below_elems: below_elems,
+        id: "trz-" <> random_id(),
+        html_attrs: html_attrs,
+        svg_attrs:
+          Keyword.merge(svg_attrs_size, config.attrs, fn _k, v1, v2 ->
+            v1 <> v2
+          end),
+        clip_path_defs: clip_path_defs
       }
 
       ~H"""
-      <div id={@id} class="trz-container w-100% h-100%">
-        <svg
-          version="1.1"
-          viewBox={"0 0 #{@config.width} #{@config.height}"}
-          width={@config.width}
-          height={@config.height}
-          xmlns="http://www.w3.org/2000/svg"
-          style="overflow: visible;"
-        >
-          <%= for elem <- @chart_elems do %>
+      <div id={@id} class="trz-container" style="position: relative;">
+        <div {@html_attrs}>
+          <%= for elem <- @above_elems do %>
             {Phoenix.LiveView.TagEngine.component(
               elem,
               [],
               {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
             )}
           <% end %>
-        </svg>
+          <svg version="1.1" xmlns="http://www.w3.org/2000/svg" {@svg_attrs}>
+            {Phoenix.LiveView.TagEngine.component(
+              @clip_path_defs,
+              [],
+              {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+            )}
+
+            <%= for elem <- @chart_elems do %>
+              {Phoenix.LiveView.TagEngine.component(
+                elem,
+                [],
+                {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+              )}
+            <% end %>
+          </svg>
+          <%= for elem <- @below_elems do %>
+            {Phoenix.LiveView.TagEngine.component(
+              elem,
+              [],
+              {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+            )}
+          <% end %>
+        </div>
       </div>
       """
     end
@@ -309,8 +381,46 @@ defmodule Terrestrial.Svg do
     end
   end
 
-  defp position_transform(plane, rotation, x, y, x_off, y_off) do
+  def position_transform(plane, rotation, x, y, x_off, y_off) do
     "translate(#{Coords.to_svg_x(x, plane) + x_off},#{Coords.to_svg_y(y, plane) + y_off}) rotate(#{rotation})"
+  end
+
+  @doc """
+  Place the provided content in a div with attrs at a certain % positon
+  """
+  def position_html(plane, x, y, x_off, y_off, attrs, func) do
+    x_percentage = (Coords.to_svg_x(x, plane) + x_off) * 100 / plane.x.length
+    y_percentage = (Coords.to_svg_y(y, plane) - y_off) * 100 / plane.y.length
+
+    position_styles =
+      Enum.join(
+        [
+          "left: #{x_percentage}%",
+          "top: #{y_percentage}%",
+          "margin-right: -400px",
+          "position: absolute"
+        ],
+        ";"
+      )
+
+    attrs =
+      Keyword.merge(attrs, [style: position_styles], fn _k, v1, v2 ->
+        v1 <> v2
+      end)
+
+    fn _ ->
+      assigns = %{plane: plane, rest: attrs, func: func}
+
+      ~H"""
+      <div {@rest}>
+        {Phoenix.LiveView.TagEngine.component(
+          @func.(@plane),
+          [],
+          {__ENV__.module, __ENV__.function, __ENV__.file, __ENV__.line}
+        )}
+      </div>
+      """
+    end
   end
 
   def label(plane, config, inner, point) do
@@ -672,9 +782,8 @@ defmodule Terrestrial.Svg do
       16
       |> :crypto.strong_rand_bytes()
       |> Base.url_encode64()
+      |> String.slice(0..-3//1)
 
-    "trz-"
-    |> Kernel.<>(random_b64)
-    |> String.replace(["/", "+"], "-")
+    String.replace(random_b64, ["/", "+"], "-")
   end
 end

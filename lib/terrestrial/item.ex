@@ -40,4 +40,8 @@ defmodule Terrestrial.Item do
             element_index: integer()
           }
   end
+
+  def get_limits(%__MODULE__{} = item) do
+    item.limits
+  end
 end

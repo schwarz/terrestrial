@@ -167,11 +167,21 @@ defmodule Terrestrial.Attributes do
   end
 
   @doc """
+  Like percent/2, but returns a function that can be called with the axis later.
+  """
+  @spec percent(float()) :: (Terrestrial.Coordinates.axis() -> float())
+  def percent(per) do
+    fn axis ->
+      percent(per, axis)
+    end
+  end
+
+  @doc """
   Given an axis, find a value at the given percentage
   """
   @spec percent(Terrestrial.Coordinates.axis(), float()) :: float()
-  def percent(%{min: _, max: _} = a, per) do
-    a.min + (a.max - a.min) * per
+  def percent(per, %{min: _, max: _} = a) do
+    a.min + (a.max - a.min) * per / 100.0
   end
 
   @doc """
@@ -260,12 +270,22 @@ defmodule Terrestrial.Attributes do
   end
 
   @doc """
-  Add arbitrary attributes to an element using a Keyword list.
+  Add arbitrary attributes to an SVG element using a Keyword list.
   """
   @spec attrs(keyword()) :: (map() -> map())
   def attrs(v) do
     fn %{attrs: _} = config ->
       Map.put(config, :attrs, v)
+    end
+  end
+
+  @doc """
+  Add arbitrary attributes to an HTML element using a Keyword list.
+  """
+  @spec html_attrs(keyword()) :: (map() -> map())
+  def html_attrs(v) do
+    fn %{html_attrs: _} = config ->
+      Map.put(config, :html_attrs, v)
     end
   end
 

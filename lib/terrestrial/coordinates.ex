@@ -38,6 +38,25 @@ defmodule Terrestrial.Coordinates do
     }
   end
 
+  # Only needs to be unique inside an SVG, we need this for the overflow clipPath.
+  @spec to_id(plane()) :: String.t()
+  def to_id(plane) do
+    [
+      plane.x.length,
+      plane.x.min,
+      plane.x.max,
+      plane.x.margin_min,
+      plane.x.margin_max,
+      plane.y.length,
+      plane.y.min,
+      plane.y.max,
+      plane.y.margin_min,
+      plane.y.margin_max
+    ]
+    |> Enum.join("_")
+    |> String.replace(".", "-")
+  end
+
   def scale_svg_x(plane, value) do
     value * (inner_width(plane) / range(plane.x))
   end
@@ -69,11 +88,11 @@ defmodule Terrestrial.Coordinates do
     if diff > 0, do: diff, else: 1
   end
 
-  defp inner_width(plane) do
+  def inner_width(plane) do
     inner_length(plane.x)
   end
 
-  defp inner_height(plane) do
+  def inner_height(plane) do
     inner_length(plane.y)
   end
 
