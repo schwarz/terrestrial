@@ -38,6 +38,8 @@ defmodule Terrestrial do
   alias Terrestrial.Attributes, as: CA
   alias Terrestrial.Coordinates, as: Coords
 
+  require Logger
+
   attr :id, :string, default: nil
   attr :elements, :list, default: []
   attr :edits, :list, default: []
@@ -214,12 +216,41 @@ defmodule Terrestrial do
     defstruct color: "", width: 0, dot_grid: false, dashed: []
   end
 
+  defmodule Dot do
+    @moduledoc false
+    @type shape :: :circle | :triangle | :square | :diamond | :cross | :plus
+
+    defstruct color: Terrestrial.Colors.pink(),
+              opacity: 1.0,
+              size: 6.0,
+              border: "",
+              border_width: 0,
+              highlight: "",
+              highlight_width: 5.0,
+              highlight_color: "",
+              shape: nil,
+              hide_overflow: false
+
+    @type t :: %__MODULE__{
+            color: String.t(),
+            opacity: float(),
+            size: float(),
+            border: String.t(),
+            border_width: float(),
+            highlight: String.t(),
+            highlight_width: float(),
+            highlight_color: String.t(),
+            shape: shape() | nil,
+            hide_overflow: boolean()
+          }
+  end
+
   def grid(edits \\ []) do
     # TODO Chart:1409
     config = apply_edits(%Grid{}, edits)
 
     if config.dot_grid do
-      raise "dot_grid is not supported yet"
+      Logger.warning("dot_grid is not supported yet")
     end
 
     color =
@@ -280,11 +311,14 @@ defmodule Terrestrial do
             plane,
             & &1.x,
             & &1.y,
-            [
-              CA.color(color),
-              CA.size(width),
-              CA.circle()
-            ],
+            Terrestrial.Internal.apply_edits(
+              %Dot{},
+              [
+                CA.color(color),
+                CA.size(width),
+                CA.circle()
+              ]
+            ),
             %{x: x, y: y}
           )
         ]
@@ -432,35 +466,6 @@ defmodule Terrestrial do
       to_y: y,
       presentation_edits: edits
     }
-  end
-
-  defmodule Dot do
-    @moduledoc false
-    @type shape :: :circle | :triangle | :square | :diamond | :cross | :plus
-
-    defstruct color: Terrestrial.Colors.pink(),
-              opacity: 1.0,
-              size: 6.0,
-              border: "",
-              border_width: 0,
-              highlight: "",
-              highlight_width: 5.0,
-              highlight_color: "",
-              shape: nil,
-              hide_overflow: false
-
-    @type t :: %__MODULE__{
-            color: String.t(),
-            opacity: float(),
-            size: float(),
-            border: String.t(),
-            border_width: float(),
-            highlight: String.t(),
-            highlight_width: float(),
-            highlight_color: String.t(),
-            shape: shape() | nil,
-            hide_overflow: boolean()
-          }
   end
 
   @doc """

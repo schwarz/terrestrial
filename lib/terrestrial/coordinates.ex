@@ -30,7 +30,7 @@ defmodule Terrestrial.Coordinates do
     # line
     %{
       stroke: config.color,
-      stroke_width: to_string(config.width()),
+      stroke_width: to_string(config.width),
       x1: point.x |> to_svg_x(plane) |> to_string(),
       x2: (point.x + if(is_x, do: 0, else: -config.length)) |> to_svg_x(plane) |> to_string(),
       y1: point.y |> to_svg_y(plane) |> to_string(),
