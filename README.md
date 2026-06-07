@@ -6,6 +6,8 @@ SVG charting library for Elixir/Phoenix, a partial port of [elm-charts](https://
 
 **Warning: Under development**
 
+*n.b.* The manual port seems a bit silly given the capabilities of today's agents. Expect an agentic rewrite.
+
 ## Installation
 
 Add `terrestrial` to your list of dependencies in `mix.exs`:
