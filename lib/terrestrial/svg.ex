@@ -62,11 +62,6 @@ defmodule Terrestrial.Svg do
     end
   end
 
-  defp empty_component(assigns) do
-    ~H"""
-    """
-  end
-
   def dot(plane, to_x, to_y, config, datum) do
     actual_x = to_x.(datum)
     actual_y = to_y.(datum)
@@ -177,6 +172,7 @@ defmodule Terrestrial.Svg do
 
         nil ->
           ~H"""
+
           """
 
         _ ->

@@ -313,7 +313,7 @@ defmodule Terrestrial.Bars do
     end
   end
 
-  def maybe_update_color_if_gradient(product, default_color) do
+  def maybe_update_color_if_gradient(product, _default_color) do
     # TODO
     product
   end

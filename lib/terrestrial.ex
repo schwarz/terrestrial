@@ -218,6 +218,10 @@ defmodule Terrestrial do
     # TODO Chart:1409
     config = apply_edits(%Grid{}, edits)
 
+    if config.dot_grid do
+      raise "dot_grid is not supported yet"
+    end
+
     color =
       case config.color do
         "" ->
@@ -304,7 +308,7 @@ defmodule Terrestrial do
         ~H"""
         <g class="grid">
           <%= if @config.dot_grid do %>
-            {raise "TODO dot_grid is not supported yet"}
+            {# TODO Support dot grid}
           <% else %>
             <g class="x-grid">
               <%= for line_func <- @grid_lines_x do %>
